@@ -140,7 +140,18 @@ export function BookmarkCard({ bookmark, folders, onMoveToFolder, onDeleteBookma
                       </div>
                     )}
 
-                    <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-accent text-sm transition-colors">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const handle = bookmark.author.handle.replace("@", "");
+                        const tweetId = bookmark.tweetId;
+                        if (tweetId) {
+                          window.open(`https://x.com/${handle}/status/${tweetId}`, "_blank", "noopener,noreferrer");
+                        }
+                        closeAll();
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-accent text-sm transition-colors"
+                    >
                       <ExternalLink className="h-4 w-4" />
                       원문 보기
                     </button>

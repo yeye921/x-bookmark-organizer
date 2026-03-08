@@ -1,5 +1,6 @@
 export interface Bookmark {
   id: string;
+  tweetId?: string;
   author: {
     name: string;
     handle: string;
