@@ -24,18 +24,7 @@ export function useAuth() {
   }, []);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          await fetchProfile(session.user.id);
-        } else {
-          setTwitterProfile(null);
-        }
-        setLoading(false);
-      }
-    );
-
+    // 1. Restore session from storage first
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -43,6 +32,18 @@ export function useAuth() {
       }
       setLoading(false);
     });
+
+    // 2. Listen for subsequent auth changes (sign in/out)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          fetchProfile(session.user.id);
+        } else {
+          setTwitterProfile(null);
+        }
+      }
+    );
 
     return () => subscription.unsubscribe();
   }, [fetchProfile]);
