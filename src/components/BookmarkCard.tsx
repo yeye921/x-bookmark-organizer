@@ -9,6 +9,7 @@ import {
   Trash2,
   BadgeCheck,
   Check,
+  ChevronRight,
 } from "lucide-react";
 import type { Bookmark, Folder } from "@/data/mockBookmarks";
 import { useState } from "react";
