@@ -88,47 +88,55 @@ export function BookmarkCard({ bookmark, folders, onMoveToFolder, onDeleteBookma
                     className="fixed inset-0 z-10"
                     onClick={closeAll}
                   />
-                  <div className="absolute right-0 top-8 z-20 w-56 bg-popover border border-border rounded-xl shadow-xl py-1 overflow-hidden max-h-[360px] overflow-y-auto">
-                    {/* Folder section label */}
-                    <div className="px-4 py-2 text-xs text-muted-foreground font-medium">
-                      폴더 선택
-                    </div>
-
-                    <button
-                      onClick={() => {
-                        onMoveToFolder(bookmark.id, null);
-                        closeAll();
-                      }}
-                      className={cn(
-                        "w-full flex items-center gap-3 px-4 py-2.5 hover:bg-accent text-sm transition-colors text-left",
-                        bookmark.folderId === null && "text-primary font-medium"
-                      )}
+                  <div className="absolute right-0 top-8 z-20 w-52 bg-popover border border-border rounded-xl shadow-xl py-1 overflow-hidden">
+                    {/* Folder modify - hover submenu */}
+                    <div
+                      className="relative"
+                      onMouseEnter={() => setShowFolderSub(true)}
+                      onMouseLeave={() => setShowFolderSub(false)}
                     >
-                      <FolderInput className="h-4 w-4" />
-                      미분류
-                      {bookmark.folderId === null && <Check className="h-3.5 w-3.5 ml-auto" />}
-                    </button>
-                    {folders
-                      .filter((f) => f.id !== "all")
-                      .map((folder) => (
-                        <button
-                          key={folder.id}
-                          onClick={() => {
-                            onMoveToFolder(bookmark.id, folder.id);
-                            closeAll();
-                          }}
-                          className={cn(
-                            "w-full flex items-center gap-3 px-4 py-2.5 hover:bg-accent text-sm transition-colors text-left",
-                            bookmark.folderId === folder.id && "text-primary font-medium"
-                          )}
-                        >
-                          <FolderInput className="h-4 w-4" />
-                          {folder.name}
-                          {bookmark.folderId === folder.id && <Check className="h-3.5 w-3.5 ml-auto" />}
-                        </button>
-                      ))}
+                      <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-accent text-sm transition-colors">
+                        <FolderInput className="h-4 w-4" />
+                        <span className="flex-1 text-left">폴더 수정</span>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      </button>
 
-                    <div className="border-t border-border my-1" />
+                      {showFolderSub && (
+                        <div className="absolute left-full top-0 ml-1 w-48 bg-popover border border-border rounded-xl shadow-xl py-1 overflow-hidden z-30 max-h-[280px] overflow-y-auto">
+                          <button
+                            onClick={() => {
+                              onMoveToFolder(bookmark.id, null);
+                              closeAll();
+                            }}
+                            className={cn(
+                              "w-full flex items-center gap-3 px-4 py-2.5 hover:bg-accent text-sm transition-colors text-left",
+                              bookmark.folderId === null && "text-primary font-medium"
+                            )}
+                          >
+                            미분류
+                            {bookmark.folderId === null && <Check className="h-3.5 w-3.5 ml-auto" />}
+                          </button>
+                          {folders
+                            .filter((f) => f.id !== "all")
+                            .map((folder) => (
+                              <button
+                                key={folder.id}
+                                onClick={() => {
+                                  onMoveToFolder(bookmark.id, folder.id);
+                                  closeAll();
+                                }}
+                                className={cn(
+                                  "w-full flex items-center gap-3 px-4 py-2.5 hover:bg-accent text-sm transition-colors text-left",
+                                  bookmark.folderId === folder.id && "text-primary font-medium"
+                                )}
+                              >
+                                {folder.name}
+                                {bookmark.folderId === folder.id && <Check className="h-3.5 w-3.5 ml-auto" />}
+                              </button>
+                            ))}
+                        </div>
+                      )}
+                    </div>
 
                     <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-accent text-sm transition-colors">
                       <ExternalLink className="h-4 w-4" />
