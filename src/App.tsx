@@ -17,7 +17,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<LoginPage />} />
+          <Route path="/home" element={<Index />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/twitter-callback" element={<TwitterCallback />} />
           <Route path="*" element={<NotFound />} />
