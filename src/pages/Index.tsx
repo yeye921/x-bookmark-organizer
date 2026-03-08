@@ -1,9 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { FolderSidebar } from "@/components/FolderSidebar";
 import { BookmarkCard } from "@/components/BookmarkCard";
 import { useAuth } from "@/hooks/useAuth";
 import { useBookmarks } from "@/hooks/useBookmarks";
 import { useTwitterAuth } from "@/hooks/useTwitterAuth";
+import { useTheme } from "@/hooks/useTheme";
 import { Navigate } from "react-router-dom";
 import {
   Search,
@@ -11,6 +12,8 @@ import {
   RefreshCw,
   LogOut,
   Loader2,
+  Sun,
+  Moon,
 } from "lucide-react";
 import type { Folder, Bookmark } from "@/data/mockBookmarks";
 
