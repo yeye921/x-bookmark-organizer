@@ -173,7 +173,7 @@ export function BookmarkCard({ bookmark, folders, onMoveToFolder, onDeleteBookma
 
           {/* Content */}
           <p className="text-[15px] leading-relaxed mt-1 whitespace-pre-wrap">
-            {bookmark.content}
+            {bookmark.content.replace(/https?:\/\/t\.co\/\S+/g, "").trim()}
           </p>
 
           {/* Images */}
