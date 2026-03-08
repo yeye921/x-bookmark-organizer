@@ -19,8 +19,8 @@ export function useTwitterAuth() {
       const codeVerifier = generateCodeVerifier();
       const redirectUri = `${window.location.origin}/twitter-callback`;
 
-      sessionStorage.setItem("twitter_code_verifier", codeVerifier);
-      sessionStorage.setItem("twitter_redirect_uri", redirectUri);
+      localStorage.setItem("twitter_code_verifier", codeVerifier);
+      localStorage.setItem("twitter_redirect_uri", redirectUri);
 
       // No auth needed - this is the login entry point
       const response = await fetch(
