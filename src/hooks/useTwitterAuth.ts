@@ -58,6 +58,7 @@ export function useTwitterAuth() {
         setConnecting(false);
         throw new Error("팝업이 차단되었습니다. 팝업 허용 후 다시 시도해주세요.");
       }
+    } catch (error) {
       console.error("Twitter connect error:", error);
       setConnecting(false);
       throw error;
