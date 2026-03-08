@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Bookmark,
   Code,
@@ -7,11 +7,13 @@ import {
   Brain,
   Heart,
   FolderPlus,
-  MoreHorizontal,
   Search,
   ChevronLeft,
+  Folder,
+  Check,
+  X,
 } from "lucide-react";
-import { folders } from "@/data/mockBookmarks";
+import type { Folder as FolderType } from "@/data/mockBookmarks";
 import { cn } from "@/lib/utils";
 
 const iconMap: Record<string, React.ElementType> = {
@@ -21,6 +23,7 @@ const iconMap: Record<string, React.ElementType> = {
   rocket: Rocket,
   brain: Brain,
   heart: Heart,
+  folder: Folder,
 };
 
 interface FolderSidebarProps {
@@ -28,6 +31,8 @@ interface FolderSidebarProps {
   onSelectFolder: (id: string) => void;
   collapsed: boolean;
   onToggleCollapse: () => void;
+  folders: FolderType[];
+  onAddFolder: (name: string) => void;
 }
 
 export function FolderSidebar({
@@ -35,12 +40,32 @@ export function FolderSidebar({
   onSelectFolder,
   collapsed,
   onToggleCollapse,
+  folders,
+  onAddFolder,
 }: FolderSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isAdding && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isAdding]);
 
   const filteredFolders = folders.filter((f) =>
     f.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleAddFolder = () => {
+    const trimmed = newFolderName.trim();
+    if (trimmed) {
+      onAddFolder(trimmed);
+      setNewFolderName("");
+      setIsAdding(false);
+    }
+  };
 
   return (
     <aside
@@ -120,14 +145,41 @@ export function FolderSidebar({
 
       {/* Add Folder */}
       <div className="p-3 border-t border-border">
-        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-accent transition-colors">
-          <FolderPlus className="h-5 w-5 text-primary shrink-0" />
-          {!collapsed && (
-            <span className="text-[15px] text-primary font-medium">
-              새 폴더
-            </span>
-          )}
-        </button>
+        {isAdding && !collapsed ? (
+          <div className="flex items-center gap-2 px-3">
+            <Folder className="h-5 w-5 text-primary shrink-0" />
+            <input
+              ref={inputRef}
+              type="text"
+              placeholder="폴더 이름"
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleAddFolder();
+                if (e.key === "Escape") { setIsAdding(false); setNewFolderName(""); }
+              }}
+              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground border-b border-primary py-1.5"
+            />
+            <button onClick={handleAddFolder} className="p-1 rounded-full hover:bg-accent">
+              <Check className="h-4 w-4 text-primary" />
+            </button>
+            <button onClick={() => { setIsAdding(false); setNewFolderName(""); }} className="p-1 rounded-full hover:bg-accent">
+              <X className="h-4 w-4 text-muted-foreground" />
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setIsAdding(true)}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-accent transition-colors"
+          >
+            <FolderPlus className="h-5 w-5 text-primary shrink-0" />
+            {!collapsed && (
+              <span className="text-[15px] text-primary font-medium">
+                새 폴더
+              </span>
+            )}
+          </button>
+        )}
       </div>
     </aside>
   );

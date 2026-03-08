@@ -1,15 +1,21 @@
 import { useState, useMemo } from "react";
 import { FolderSidebar } from "@/components/FolderSidebar";
 import { BookmarkCard } from "@/components/BookmarkCard";
-import { bookmarks, folders } from "@/data/mockBookmarks";
+import { bookmarks, folders as initialFolders, type Folder } from "@/data/mockBookmarks";
 import { Search, SlidersHorizontal } from "lucide-react";
 
 const Index = () => {
   const [selectedFolder, setSelectedFolder] = useState("all");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [folderList, setFolderList] = useState<Folder[]>(initialFolders);
 
-  const currentFolder = folders.find((f) => f.id === selectedFolder);
+  const currentFolder = folderList.find((f) => f.id === selectedFolder);
+
+  const handleAddFolder = (name: string) => {
+    const id = name.toLowerCase().replace(/\s+/g, "-") + "-" + Date.now();
+    setFolderList((prev) => [...prev, { id, name, icon: "folder", count: 0 }]);
+  };
 
   const filteredBookmarks = useMemo(() => {
     let filtered = bookmarks;
@@ -35,6 +41,8 @@ const Index = () => {
         onSelectFolder={setSelectedFolder}
         collapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+        folders={folderList}
+        onAddFolder={handleAddFolder}
       />
 
       {/* Main content */}
