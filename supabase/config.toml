@@ -1,1 +1,4 @@
 project_id = "coadhjcqseqpgybxqnis"
+
+[functions.twitter-auth]
+verify_jwt = false

@@ -30,27 +30,8 @@ Deno.serve(async (req) => {
 
     const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Get the authenticated user
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      throw new Error("No authorization header");
-    }
-
-    const supabaseClient = createClient(
-      SUPABASE_URL,
-      Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!
-    );
-    const {
-      data: { user },
-      error: userError,
-    } = await supabaseClient.auth.getUser(authHeader.replace("Bearer ", ""));
-
-    if (userError || !user) {
-      throw new Error("Unauthorized");
-    }
-
     if (action === "auth-url") {
-      // Generate Twitter OAuth 2.0 authorization URL with PKCE
+      // No auth required - this is the login entry point
       const { redirect_uri, code_verifier } = await req.json();
 
       // Generate code challenge from code verifier (S256)
@@ -82,7 +63,7 @@ Deno.serve(async (req) => {
     }
 
     if (action === "callback") {
-      // Exchange authorization code for tokens
+      // Exchange authorization code for Twitter tokens
       const { code, redirect_uri, code_verifier } = await req.json();
 
       const tokenRes = await fetch("https://api.x.com/2/oauth2/token", {
@@ -116,15 +97,47 @@ Deno.serve(async (req) => {
       }
 
       const twitterUser = meData.data;
+      const email = `${twitterUser.id}@x-user.local`;
 
-      // Store tokens in profile
+      // Find or create Supabase user by twitter_user_id
+      // First check if profile with this twitter_user_id exists
+      const { data: existingProfile } = await supabaseAdmin
+        .from("profiles")
+        .select("user_id")
+        .eq("twitter_user_id", twitterUser.id)
+        .single();
+
+      let userId: string;
+
+      if (existingProfile) {
+        userId = existingProfile.user_id;
+      } else {
+        // Create new Supabase user
+        const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+          email,
+          email_confirm: true,
+          user_metadata: { twitter_username: twitterUser.username },
+        });
+
+        if (createError) {
+          // User might already exist with this email
+          const { data: listData } = await supabaseAdmin.auth.admin.listUsers();
+          const found = listData?.users?.find((u) => u.email === email);
+          if (!found) throw new Error(`Failed to create user: ${createError.message}`);
+          userId = found.id;
+        } else {
+          userId = newUser.user.id;
+        }
+      }
+
+      // Update profile with Twitter data
       const expiresAt = new Date(Date.now() + tokenData.expires_in * 1000);
 
-      const { error: upsertError } = await supabaseAdmin
+      await supabaseAdmin
         .from("profiles")
         .upsert(
           {
-            user_id: user.id,
+            user_id: userId,
             twitter_user_id: twitterUser.id,
             twitter_username: twitterUser.username,
             twitter_display_name: twitterUser.name,
@@ -136,13 +149,33 @@ Deno.serve(async (req) => {
           { onConflict: "user_id" }
         );
 
-      if (upsertError) {
-        console.error("Profile upsert error:", upsertError);
-        throw new Error(`Failed to save profile: ${upsertError.message}`);
+      // Generate a session for this user
+      // We use a custom token approach: generate a magic link token
+      const { data: sessionData, error: sessionError } =
+        await supabaseAdmin.auth.admin.generateLink({
+          type: "magiclink",
+          email,
+        });
+
+      if (sessionError || !sessionData) {
+        console.error("Session generation error:", sessionError);
+        throw new Error("Failed to generate session");
       }
+
+      // Extract the token hash from the link
+      const linkUrl = new URL(sessionData.properties?.action_link || "");
+      const token_hash = linkUrl.searchParams.get("token") ||
+        linkUrl.hash?.replace("#", "") ||
+        "";
+
+      // We need to extract hashed_token from the action_link
+      // The action_link format: {SITE_URL}/auth/confirm?token_hash=xxx&type=magiclink
+      const hashed_token = linkUrl.searchParams.get("token_hash") || token_hash;
 
       return new Response(
         JSON.stringify({
+          token_hash: hashed_token,
+          email,
           twitter_user: {
             id: twitterUser.id,
             username: twitterUser.username,
@@ -155,7 +188,19 @@ Deno.serve(async (req) => {
     }
 
     if (action === "refresh-token") {
-      // Refresh the access token
+      // This action requires auth
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader) throw new Error("No authorization header");
+
+      const supabaseClient = createClient(
+        SUPABASE_URL,
+        Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY") || ""
+      );
+      const { data: { user }, error: userError } = await supabaseClient.auth.getUser(
+        authHeader.replace("Bearer ", "")
+      );
+      if (userError || !user) throw new Error("Unauthorized");
+
       const { data: profile } = await supabaseAdmin
         .from("profiles")
         .select("twitter_refresh_token")
