@@ -66,9 +66,9 @@ export function useTwitterAuth() {
   }, []);
 
   const handleCallback = useCallback(async (code: string, state: string) => {
-    const savedState = sessionStorage.getItem("twitter_state");
-    const codeVerifier = sessionStorage.getItem("twitter_code_verifier");
-    const redirectUri = sessionStorage.getItem("twitter_redirect_uri");
+    const savedState = localStorage.getItem("twitter_state");
+    const codeVerifier = localStorage.getItem("twitter_code_verifier");
+    const redirectUri = localStorage.getItem("twitter_redirect_uri");
 
     if (state !== savedState) {
       throw new Error("State mismatch - possible CSRF attack");
