@@ -39,7 +39,6 @@ interface BookmarkCardProps {
 
 export function BookmarkCard({ bookmark, folders, onMoveToFolder, onDeleteBookmark }: BookmarkCardProps) {
   const [showMenu, setShowMenu] = useState(false);
-  const [showFolderPicker, setShowFolderPicker] = useState(false);
 
   const closeAll = () => {
     setShowMenu(false);
