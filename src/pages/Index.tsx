@@ -18,9 +18,9 @@ const Index = () => {
 
   const currentFolder = folderList.find((f) => f.id === selectedFolder);
 
-  const handleAddFolder = useCallback((name: string) => {
+  const handleAddFolder = useCallback((name: string, icon: string = "folder") => {
     const id = name.toLowerCase().replace(/\s+/g, "-") + "-" + Date.now();
-    setFolderList((prev) => [...prev, { id, name, icon: "folder", count: 0 }]);
+    setFolderList((prev) => [...prev, { id, name, icon, count: 0 }]);
   }, []);
 
   const handleDeleteFolder = useCallback((id: string) => {
