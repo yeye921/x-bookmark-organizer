@@ -41,9 +41,23 @@ export function useTwitterAuth() {
       }
 
       sessionStorage.setItem("twitter_state", authData.state);
-      // Use top-level navigation to avoid iframe restrictions from Twitter
-      const target = window.top || window;
-      target.location.href = authData.auth_url;
+
+      // In preview iframe, accessing window.top can throw "The operation is insecure"
+      // so try top-navigation first and gracefully fall back to popup.
+      try {
+        if (window.top && window.top !== window) {
+          window.top.location.href = authData.auth_url;
+          return;
+        }
+      } catch {
+        // ignore and fallback to popup
+      }
+
+      const popup = window.open(authData.auth_url, "_blank", "noopener,noreferrer");
+      if (!popup) {
+        setConnecting(false);
+        throw new Error("팝업이 차단되었습니다. 팝업 허용 후 다시 시도해주세요.");
+      }
     } catch (error) {
       console.error("Twitter connect error:", error);
       setConnecting(false);
