@@ -95,7 +95,13 @@ export function BookmarkCard({ bookmark, folders, onMoveToFolder, onDeleteBookma
                       onMouseEnter={() => setShowFolderSub(true)}
                       onMouseLeave={() => setShowFolderSub(false)}
                     >
-                      <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-accent text-sm transition-colors">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowFolderSub((prev) => !prev);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-accent text-sm transition-colors"
+                      >
                         <FolderInput className="h-4 w-4" />
                         <span className="flex-1 text-left">폴더 수정</span>
                         <ChevronRight className="h-4 w-4 text-muted-foreground" />
