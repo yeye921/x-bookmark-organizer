@@ -159,6 +159,17 @@ const Index = () => {
                 </button>
               )}
               <button
+                onClick={toggleTheme}
+                className="p-2 rounded-full hover:bg-accent transition-colors"
+                title={theme === "dark" ? "라이트 모드" : "다크 모드"}
+              >
+                {theme === "dark" ? (
+                  <Sun className="h-5 w-5 text-muted-foreground" />
+                ) : (
+                  <Moon className="h-5 w-5 text-muted-foreground" />
+                )}
+              </button>
+              <button
                 onClick={signOut}
                 className="p-2 rounded-full hover:bg-accent transition-colors"
                 title="로그아웃"
