@@ -14,7 +14,146 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookmarks: {
+        Row: {
+          author_avatar: string | null
+          author_handle: string | null
+          author_name: string | null
+          author_verified: boolean | null
+          content: string | null
+          created_at: string
+          folder_id: string | null
+          id: string
+          images: string[] | null
+          likes: number | null
+          replies: number | null
+          retweets: number | null
+          synced_at: string
+          tweet_id: string
+          tweet_timestamp: string | null
+          user_id: string
+          views: number | null
+        }
+        Insert: {
+          author_avatar?: string | null
+          author_handle?: string | null
+          author_name?: string | null
+          author_verified?: boolean | null
+          content?: string | null
+          created_at?: string
+          folder_id?: string | null
+          id?: string
+          images?: string[] | null
+          likes?: number | null
+          replies?: number | null
+          retweets?: number | null
+          synced_at?: string
+          tweet_id: string
+          tweet_timestamp?: string | null
+          user_id: string
+          views?: number | null
+        }
+        Update: {
+          author_avatar?: string | null
+          author_handle?: string | null
+          author_name?: string | null
+          author_verified?: boolean | null
+          content?: string | null
+          created_at?: string
+          folder_id?: string | null
+          id?: string
+          images?: string[] | null
+          likes?: number | null
+          replies?: number | null
+          retweets?: number | null
+          synced_at?: string
+          tweet_id?: string
+          tweet_timestamp?: string | null
+          user_id?: string
+          views?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookmarks_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      folders: {
+        Row: {
+          created_at: string
+          icon: string
+          id: string
+          name: string
+          position: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          icon?: string
+          id?: string
+          name: string
+          position?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          icon?: string
+          id?: string
+          name?: string
+          position?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          twitter_access_token: string | null
+          twitter_avatar_url: string | null
+          twitter_display_name: string | null
+          twitter_refresh_token: string | null
+          twitter_token_expires_at: string | null
+          twitter_user_id: string | null
+          twitter_username: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          twitter_access_token?: string | null
+          twitter_avatar_url?: string | null
+          twitter_display_name?: string | null
+          twitter_refresh_token?: string | null
+          twitter_token_expires_at?: string | null
+          twitter_user_id?: string | null
+          twitter_username?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          twitter_access_token?: string | null
+          twitter_avatar_url?: string | null
+          twitter_display_name?: string | null
+          twitter_refresh_token?: string | null
+          twitter_token_expires_at?: string | null
+          twitter_user_id?: string | null
+          twitter_username?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
