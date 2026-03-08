@@ -13,7 +13,7 @@ export interface Bookmark {
   replies: number;
   views: number;
   folderId: string | null;
-  image?: string;
+  images?: string[];
 }
 
 export interface Folder {
@@ -54,6 +54,9 @@ export const bookmarks: Bookmark[] = [
     replies: 201,
     views: 421000,
     folderId: "startup",
+    images: [
+      "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&h=400&fit=crop",
+    ],
   },
   {
     id: "3",
@@ -65,6 +68,10 @@ export const bookmarks: Bookmark[] = [
     replies: 44,
     views: 198000,
     folderId: "design",
+    images: [
+      "https://images.unsplash.com/photo-1545235617-9465d2a55698?w=600&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1558655146-d09347e92766?w=600&h=400&fit=crop",
+    ],
   },
   {
     id: "4",
@@ -76,6 +83,9 @@ export const bookmarks: Bookmark[] = [
     replies: 567,
     views: 2100000,
     folderId: "ai",
+    images: [
+      "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=600&h=400&fit=crop",
+    ],
   },
   {
     id: "5",
@@ -98,6 +108,12 @@ export const bookmarks: Bookmark[] = [
     replies: 67,
     views: 156000,
     folderId: "design",
+    images: [
+      "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1558655146-d09347e92766?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1545235617-9465d2a55698?w=400&h=400&fit=crop",
+      "https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?w=400&h=400&fit=crop",
+    ],
   },
   {
     id: "7",
@@ -131,6 +147,11 @@ export const bookmarks: Bookmark[] = [
     replies: 890,
     views: 3400000,
     folderId: "ai",
+    images: [
+      "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=600&h=300&fit=crop",
+      "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=600&h=300&fit=crop",
+      "https://images.unsplash.com/photo-1684369175833-4b445ad6bfb5?w=600&h=300&fit=crop",
+    ],
   },
   {
     id: "10",

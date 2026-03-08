@@ -8,10 +8,12 @@ import {
   FolderInput,
   Trash2,
   BadgeCheck,
+  ChevronRight,
 } from "lucide-react";
-import type { Bookmark } from "@/data/mockBookmarks";
+import type { Bookmark, Folder } from "@/data/mockBookmarks";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { ImageGrid } from "./ImageGrid";
 
 function formatNumber(n: number): string {
   if (n >= 1000000) return (n / 1000000).toFixed(1) + "M";
@@ -30,10 +32,19 @@ function getInitials(name: string): string {
 
 interface BookmarkCardProps {
   bookmark: Bookmark;
+  folders: Folder[];
+  onMoveToFolder: (bookmarkId: string, folderId: string | null) => void;
+  onDeleteBookmark: (bookmarkId: string) => void;
 }
 
-export function BookmarkCard({ bookmark }: BookmarkCardProps) {
+export function BookmarkCard({ bookmark, folders, onMoveToFolder, onDeleteBookmark }: BookmarkCardProps) {
   const [showMenu, setShowMenu] = useState(false);
+  const [showFolderPicker, setShowFolderPicker] = useState(false);
+
+  const closeAll = () => {
+    setShowMenu(false);
+    setShowFolderPicker(false);
+  };
 
   return (
     <article className="px-4 py-3 border-b border-border hover:bg-accent/50 transition-colors cursor-pointer">
@@ -64,6 +75,7 @@ export function BookmarkCard({ bookmark }: BookmarkCardProps) {
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowMenu(!showMenu);
+                  setShowFolderPicker(false);
                 }}
                 className="p-1.5 rounded-full hover:bg-primary/10 hover:text-primary transition-colors"
               >
@@ -74,18 +86,69 @@ export function BookmarkCard({ bookmark }: BookmarkCardProps) {
                 <>
                   <div
                     className="fixed inset-0 z-10"
-                    onClick={() => setShowMenu(false)}
+                    onClick={closeAll}
                   />
                   <div className="absolute right-0 top-8 z-20 w-56 bg-popover border border-border rounded-xl shadow-xl py-1 overflow-hidden">
-                    <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-accent text-sm transition-colors">
-                      <FolderInput className="h-4 w-4" />
-                      폴더로 이동
-                    </button>
+                    {/* Move to folder */}
+                    <div className="relative">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowFolderPicker(!showFolderPicker);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-accent text-sm transition-colors"
+                      >
+                        <FolderInput className="h-4 w-4" />
+                        <span className="flex-1 text-left">폴더로 이동</span>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      </button>
+
+                      {showFolderPicker && (
+                        <div className="absolute left-full top-0 ml-1 w-48 bg-popover border border-border rounded-xl shadow-xl py-1 overflow-hidden z-30">
+                          <button
+                            onClick={() => {
+                              onMoveToFolder(bookmark.id, null);
+                              closeAll();
+                            }}
+                            className={cn(
+                              "w-full flex items-center px-4 py-2.5 hover:bg-accent text-sm transition-colors text-left",
+                              bookmark.folderId === null && "text-primary font-medium"
+                            )}
+                          >
+                            미분류
+                          </button>
+                          {folders
+                            .filter((f) => f.id !== "all")
+                            .map((folder) => (
+                              <button
+                                key={folder.id}
+                                onClick={() => {
+                                  onMoveToFolder(bookmark.id, folder.id);
+                                  closeAll();
+                                }}
+                                className={cn(
+                                  "w-full flex items-center px-4 py-2.5 hover:bg-accent text-sm transition-colors text-left",
+                                  bookmark.folderId === folder.id && "text-primary font-medium"
+                                )}
+                              >
+                                {folder.name}
+                              </button>
+                            ))}
+                        </div>
+                      )}
+                    </div>
+
                     <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-accent text-sm transition-colors">
                       <ExternalLink className="h-4 w-4" />
                       원문 보기
                     </button>
-                    <button className="w-full flex items-center gap-3 px-4 py-3 hover:bg-accent text-sm text-destructive transition-colors">
+                    <button
+                      onClick={() => {
+                        onDeleteBookmark(bookmark.id);
+                        closeAll();
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-accent text-sm text-destructive transition-colors"
+                    >
                       <Trash2 className="h-4 w-4" />
                       북마크 삭제
                     </button>
@@ -99,6 +162,11 @@ export function BookmarkCard({ bookmark }: BookmarkCardProps) {
           <p className="text-[15px] leading-relaxed mt-1 whitespace-pre-wrap">
             {bookmark.content}
           </p>
+
+          {/* Images */}
+          {bookmark.images && bookmark.images.length > 0 && (
+            <ImageGrid images={bookmark.images} />
+          )}
 
           {/* Engagement */}
           <div className="flex items-center justify-between mt-3 max-w-[425px]">
