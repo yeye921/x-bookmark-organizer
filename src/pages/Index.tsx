@@ -41,6 +41,8 @@ const Index = () => {
         onSelectFolder={setSelectedFolder}
         collapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+        folders={folderList}
+        onAddFolder={handleAddFolder}
       />
 
       {/* Main content */}
