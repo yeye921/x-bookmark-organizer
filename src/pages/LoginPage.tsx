@@ -36,7 +36,7 @@ export default function LoginPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-4">
             <Bookmark className="h-8 w-8 text-primary" />
           </div>
-          <h1 className="text-2xl font-bold">북마크 매니저</h1>
+          <h1 className="text-2xl font-bold">X 북마크 매니저</h1>
           <p className="text-muted-foreground mt-2 text-sm">
             X 북마크를 폴더로 정리하세요
           </p>

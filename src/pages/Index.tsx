@@ -1,9 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { FolderSidebar } from "@/components/FolderSidebar";
 import { BookmarkCard } from "@/components/BookmarkCard";
 import { useAuth } from "@/hooks/useAuth";
 import { useBookmarks } from "@/hooks/useBookmarks";
 import { useTwitterAuth } from "@/hooks/useTwitterAuth";
+import { useTheme } from "@/hooks/useTheme";
 import { Navigate } from "react-router-dom";
 import {
   Search,
@@ -11,12 +12,15 @@ import {
   RefreshCw,
   LogOut,
   Loader2,
+  Sun,
+  Moon,
 } from "lucide-react";
 import type { Folder, Bookmark } from "@/data/mockBookmarks";
 
 const Index = () => {
   const { user, twitterProfile, loading: authLoading, signOut, isTwitterConnected } = useAuth();
   const { connectTwitter, connecting } = useTwitterAuth();
+  const { theme, toggleTheme } = useTheme();
   const {
     bookmarks: dbBookmarks,
     folders: dbFolders,
@@ -154,6 +158,17 @@ const Index = () => {
                   X 계정 연동
                 </button>
               )}
+              <button
+                onClick={toggleTheme}
+                className="p-2 rounded-full hover:bg-accent transition-colors"
+                title={theme === "dark" ? "라이트 모드" : "다크 모드"}
+              >
+                {theme === "dark" ? (
+                  <Sun className="h-5 w-5 text-muted-foreground" />
+                ) : (
+                  <Moon className="h-5 w-5 text-muted-foreground" />
+                )}
+              </button>
               <button
                 onClick={signOut}
                 className="p-2 rounded-full hover:bg-accent transition-colors"

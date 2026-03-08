@@ -151,7 +151,7 @@ export function FolderSidebar({
       {/* Header */}
       <div className="p-4 flex items-center justify-between border-b border-border">
         {!collapsed && (
-          <h1 className="text-xl font-bold tracking-tight">북마크</h1>
+          <h1 className="text-xl font-bold tracking-tight">X 북마크 매니저</h1>
         )}
         <button
           onClick={onToggleCollapse}
