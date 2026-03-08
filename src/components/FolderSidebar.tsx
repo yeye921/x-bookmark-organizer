@@ -86,7 +86,7 @@ export function FolderSidebar({
   return (
     <aside
       className={cn(
-        "h-screen border-r border-border flex flex-col transition-all duration-200 shrink-0",
+        "h-screen sticky top-0 border-r border-border flex flex-col transition-all duration-200 shrink-0",
         collapsed ? "w-[68px]" : "w-[280px]"
       )}
     >
