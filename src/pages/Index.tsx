@@ -56,6 +56,7 @@ const Index = () => {
 
   const bookmarkList: Bookmark[] = dbBookmarks.map((b) => ({
     id: b.id,
+    tweetId: b.tweet_id,
     author: {
       name: b.author_name || "Unknown",
       handle: b.author_handle || "@unknown",
