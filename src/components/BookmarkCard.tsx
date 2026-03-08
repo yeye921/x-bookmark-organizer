@@ -42,7 +42,6 @@ export function BookmarkCard({ bookmark, folders, onMoveToFolder, onDeleteBookma
 
   const closeAll = () => {
     setShowMenu(false);
-    setShowFolderPicker(false);
   };
 
   return (
