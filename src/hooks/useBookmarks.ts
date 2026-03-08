@@ -37,7 +37,7 @@ export function useBookmarks(userId: string | undefined) {
     setLoading(true);
 
     const [bookmarksRes, foldersRes] = await Promise.all([
-      supabase.from("bookmarks").select("*").eq("user_id", userId).order("synced_at", { ascending: false }),
+      supabase.from("bookmarks").select("*").eq("user_id", userId).order("tweet_timestamp", { ascending: false, nullsFirst: false }),
       supabase.from("folders").select("*").eq("user_id", userId).order("position"),
     ]);
 
