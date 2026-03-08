@@ -146,8 +146,9 @@ export function FolderSidebar({
   return (
     <aside
       className={cn(
-        "h-screen sticky top-0 border-r border-border flex flex-col transition-all duration-200 shrink-0",
-        collapsed ? "w-[68px]" : "w-[280px]"
+        "flex flex-col transition-all duration-200 shrink-0",
+        hideCollapseButton ? "h-full w-full" : "h-screen sticky top-0 border-r border-border",
+        !hideCollapseButton && (collapsed ? "w-[68px]" : "w-[280px]")
       )}
     >
       {/* Header */}
@@ -155,17 +156,19 @@ export function FolderSidebar({
         {!collapsed && (
           <h1 className="text-xl font-bold tracking-tight">X 북마크 매니저</h1>
         )}
-        <button
-          onClick={onToggleCollapse}
-          className="p-2 rounded-full hover:bg-accent transition-colors"
-        >
-          <ChevronLeft
-            className={cn(
-              "h-5 w-5 text-foreground transition-transform",
-              collapsed && "rotate-180"
-            )}
-          />
-        </button>
+        {!hideCollapseButton && (
+          <button
+            onClick={onToggleCollapse}
+            className="p-2 rounded-full hover:bg-accent transition-colors"
+          >
+            <ChevronLeft
+              className={cn(
+                "h-5 w-5 text-foreground transition-transform",
+                collapsed && "rotate-180"
+              )}
+            />
+          </button>
+        )}
       </div>
 
       {/* Search */}
