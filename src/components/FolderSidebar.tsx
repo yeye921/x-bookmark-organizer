@@ -92,6 +92,7 @@ export function FolderSidebar({
   folders,
   onAddFolder,
   onDeleteFolder,
+  hideCollapseButton,
 }: FolderSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isAdding, setIsAdding] = useState(false);
