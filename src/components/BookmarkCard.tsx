@@ -73,7 +73,6 @@ export function BookmarkCard({ bookmark, folders, onMoveToFolder, onDeleteBookma
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowMenu(!showMenu);
-                  setShowFolderPicker(false);
                 }}
                 className="p-1.5 rounded-full hover:bg-primary/10 hover:text-primary transition-colors"
               >
