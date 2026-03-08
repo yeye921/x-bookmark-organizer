@@ -41,7 +41,9 @@ export function useTwitterAuth() {
       }
 
       sessionStorage.setItem("twitter_state", authData.state);
-      window.location.href = authData.auth_url;
+      // Use top-level navigation to avoid iframe restrictions from Twitter
+      const target = window.top || window;
+      target.location.href = authData.auth_url;
     } catch (error) {
       console.error("Twitter connect error:", error);
       setConnecting(false);
