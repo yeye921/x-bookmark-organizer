@@ -20,6 +20,7 @@ import type { Folder, Bookmark } from "@/data/mockBookmarks";
 const Index = () => {
   const { user, twitterProfile, loading: authLoading, signOut, isTwitterConnected } = useAuth();
   const { connectTwitter, connecting } = useTwitterAuth();
+  const { theme, toggleTheme } = useTheme();
   const {
     bookmarks: dbBookmarks,
     folders: dbFolders,
