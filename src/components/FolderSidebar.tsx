@@ -13,6 +13,18 @@ import {
   Check,
   X,
   Trash2,
+  Star,
+  Zap,
+  Globe,
+  Music,
+  Camera,
+  Film,
+  BookOpen,
+  Coffee,
+  Gamepad2,
+  ShoppingBag,
+  Briefcase,
+  GraduationCap,
 } from "lucide-react";
 import type { Folder as FolderType } from "@/data/mockBookmarks";
 import { cn } from "@/lib/utils";
@@ -25,7 +37,41 @@ const iconMap: Record<string, React.ElementType> = {
   brain: Brain,
   heart: Heart,
   folder: Folder,
+  star: Star,
+  zap: Zap,
+  globe: Globe,
+  music: Music,
+  camera: Camera,
+  film: Film,
+  book: BookOpen,
+  coffee: Coffee,
+  gamepad: Gamepad2,
+  shopping: ShoppingBag,
+  briefcase: Briefcase,
+  graduation: GraduationCap,
 };
+
+const iconOptions = [
+  { key: "folder", label: "폴더" },
+  { key: "bookmark", label: "북마크" },
+  { key: "code", label: "코드" },
+  { key: "palette", label: "디자인" },
+  { key: "rocket", label: "로켓" },
+  { key: "brain", label: "두뇌" },
+  { key: "heart", label: "하트" },
+  { key: "star", label: "별" },
+  { key: "zap", label: "번개" },
+  { key: "globe", label: "글로브" },
+  { key: "music", label: "음악" },
+  { key: "camera", label: "카메라" },
+  { key: "film", label: "영상" },
+  { key: "book", label: "책" },
+  { key: "coffee", label: "커피" },
+  { key: "gamepad", label: "게임" },
+  { key: "shopping", label: "쇼핑" },
+  { key: "briefcase", label: "업무" },
+  { key: "graduation", label: "교육" },
+];
 
 interface FolderSidebarProps {
   selectedFolder: string;
@@ -33,7 +79,7 @@ interface FolderSidebarProps {
   collapsed: boolean;
   onToggleCollapse: () => void;
   folders: FolderType[];
-  onAddFolder: (name: string) => void;
+  onAddFolder: (name: string, icon: string) => void;
   onDeleteFolder: (id: string) => void;
 }
 
@@ -49,6 +95,8 @@ export function FolderSidebar({
   const [searchQuery, setSearchQuery] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
+  const [selectedIcon, setSelectedIcon] = useState("folder");
+  const [showIconPicker, setShowIconPicker] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -65,10 +113,19 @@ export function FolderSidebar({
   const handleAddFolder = () => {
     const trimmed = newFolderName.trim();
     if (trimmed) {
-      onAddFolder(trimmed);
+      onAddFolder(trimmed, selectedIcon);
       setNewFolderName("");
+      setSelectedIcon("folder");
       setIsAdding(false);
+      setShowIconPicker(false);
     }
+  };
+
+  const resetAdding = () => {
+    setIsAdding(false);
+    setNewFolderName("");
+    setSelectedIcon("folder");
+    setShowIconPicker(false);
   };
 
   const handleDelete = (id: string) => {
@@ -78,10 +135,11 @@ export function FolderSidebar({
       if (selectedFolder === id) onSelectFolder("all");
     } else {
       setConfirmDeleteId(id);
-      // Auto-dismiss after 3s
       setTimeout(() => setConfirmDeleteId(null), 3000);
     }
   };
+
+  const SelectedIconComponent = iconMap[selectedIcon] || Folder;
 
   return (
     <aside
@@ -161,7 +219,6 @@ export function FolderSidebar({
                 )}
               </button>
 
-              {/* Delete button */}
               {isDeletable && !collapsed && (
                 <button
                   onClick={(e) => {
@@ -187,26 +244,62 @@ export function FolderSidebar({
       {/* Add Folder */}
       <div className="p-3 border-t border-border">
         {isAdding && !collapsed ? (
-          <div className="flex items-center gap-2 px-3">
-            <Folder className="h-5 w-5 text-primary shrink-0" />
-            <input
-              ref={inputRef}
-              type="text"
-              placeholder="폴더 이름"
-              value={newFolderName}
-              onChange={(e) => setNewFolderName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleAddFolder();
-                if (e.key === "Escape") { setIsAdding(false); setNewFolderName(""); }
-              }}
-              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground border-b border-primary py-1.5"
-            />
-            <button onClick={handleAddFolder} className="p-1 rounded-full hover:bg-accent">
-              <Check className="h-4 w-4 text-primary" />
-            </button>
-            <button onClick={() => { setIsAdding(false); setNewFolderName(""); }} className="p-1 rounded-full hover:bg-accent">
-              <X className="h-4 w-4 text-muted-foreground" />
-            </button>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 px-3">
+              {/* Icon picker trigger */}
+              <button
+                onClick={() => setShowIconPicker(!showIconPicker)}
+                className="p-1.5 rounded-lg hover:bg-accent transition-colors border border-border"
+                title="아이콘 선택"
+              >
+                <SelectedIconComponent className="h-5 w-5 text-primary" />
+              </button>
+              <input
+                ref={inputRef}
+                type="text"
+                placeholder="폴더 이름"
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleAddFolder();
+                  if (e.key === "Escape") resetAdding();
+                }}
+                className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground border-b border-primary py-1.5"
+              />
+              <button onClick={handleAddFolder} className="p-1 rounded-full hover:bg-accent">
+                <Check className="h-4 w-4 text-primary" />
+              </button>
+              <button onClick={resetAdding} className="p-1 rounded-full hover:bg-accent">
+                <X className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </div>
+
+            {/* Icon picker grid */}
+            {showIconPicker && (
+              <div className="mx-3 p-2 rounded-xl border border-border bg-popover grid grid-cols-5 gap-1">
+                {iconOptions.map((opt) => {
+                  const IconComp = iconMap[opt.key];
+                  return (
+                    <button
+                      key={opt.key}
+                      onClick={() => {
+                        setSelectedIcon(opt.key);
+                        setShowIconPicker(false);
+                      }}
+                      className={cn(
+                        "p-2 rounded-lg flex items-center justify-center transition-colors",
+                        selectedIcon === opt.key
+                          ? "bg-primary/20 text-primary"
+                          : "hover:bg-accent text-muted-foreground hover:text-foreground"
+                      )}
+                      title={opt.label}
+                    >
+                      <IconComp className="h-4 w-4" />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         ) : (
           <button
