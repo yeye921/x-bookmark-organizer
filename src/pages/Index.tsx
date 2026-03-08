@@ -14,7 +14,9 @@ import {
   Loader2,
   Sun,
   Moon,
+  Menu,
 } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import type { Folder, Bookmark } from "@/data/mockBookmarks";
 
 const Index = () => {
@@ -36,6 +38,7 @@ const Index = () => {
   const [selectedFolder, setSelectedFolder] = useState("all");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
 
   if (authLoading) {
     return (
@@ -107,46 +110,77 @@ const Index = () => {
     if (selectedFolder === id) setSelectedFolder("all");
   };
 
+  const handleSelectFolderMobile = (id: string) => {
+    setSelectedFolder(id);
+    setMobileSheetOpen(false);
+  };
+
   return (
     <div className="flex min-h-screen bg-background">
-      <FolderSidebar
-        selectedFolder={selectedFolder}
-        onSelectFolder={setSelectedFolder}
-        collapsed={sidebarCollapsed}
-        onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-        folders={folderList}
-        onAddFolder={handleAddFolder}
-        onDeleteFolder={handleDeleteFolder}
-      />
+      {/* Desktop sidebar */}
+      <div className="hidden md:block">
+        <FolderSidebar
+          selectedFolder={selectedFolder}
+          onSelectFolder={setSelectedFolder}
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+          folders={folderList}
+          onAddFolder={handleAddFolder}
+          onDeleteFolder={handleDeleteFolder}
+        />
+      </div>
 
       {/* Main content */}
-      <main className="flex-1 border-r border-border max-w-[600px]">
+      <main className="flex-1 border-r border-border md:max-w-[600px] w-full">
         {/* Header */}
         <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border">
-          <div className="px-4 py-3 flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-bold">
-                {currentFolder?.name || "북마크"}
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                {filteredBookmarks.length}개의 포스트
-              </p>
+          <div className="px-3 sm:px-4 py-3 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              {/* Mobile menu button */}
+              <Sheet open={mobileSheetOpen} onOpenChange={setMobileSheetOpen}>
+                <SheetTrigger asChild>
+                  <button className="md:hidden p-2 rounded-full hover:bg-accent transition-colors shrink-0">
+                    <Menu className="h-5 w-5" />
+                  </button>
+                </SheetTrigger>
+                <SheetContent side="left" className="p-0 w-[280px]">
+                  <FolderSidebar
+                    selectedFolder={selectedFolder}
+                    onSelectFolder={handleSelectFolderMobile}
+                    collapsed={false}
+                    onToggleCollapse={() => {}}
+                    folders={folderList}
+                    onAddFolder={handleAddFolder}
+                    onDeleteFolder={handleDeleteFolder}
+                    hideCollapseButton
+                  />
+                </SheetContent>
+              </Sheet>
+
+              <div className="min-w-0">
+                <h2 className="text-lg sm:text-xl font-bold truncate">
+                  {currentFolder?.name || "북마크"}
+                </h2>
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  {filteredBookmarks.length}개의 포스트
+                </p>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               {isTwitterConnected ? (
                 <button
                   onClick={() => syncBookmarks()}
                   disabled={syncing}
-                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+                  className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs sm:text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
                 >
                   <RefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
-                  {syncing ? "동기화 중..." : "동기화"}
+                  <span className="hidden sm:inline">{syncing ? "동기화 중..." : "동기화"}</span>
                 </button>
               ) : (
                 <button
                   onClick={() => connectTwitter()}
                   disabled={connecting}
-                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+                  className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-full bg-primary text-primary-foreground text-xs sm:text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
                 >
                   {connecting ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -155,7 +189,7 @@ const Index = () => {
                       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                     </svg>
                   )}
-                  X 계정 연동
+                  <span className="hidden sm:inline">{connecting ? "연결 중..." : "X 계정 연동"}</span>
                 </button>
               )}
               <button
@@ -180,9 +214,9 @@ const Index = () => {
           </div>
 
           {/* Search bar */}
-          <div className="px-4 pb-3 flex items-center gap-2">
-            <div className="flex-1 flex items-center gap-2 rounded-full bg-secondary px-4 py-2">
-              <Search className="h-4 w-4 text-muted-foreground" />
+          <div className="px-3 sm:px-4 pb-3 flex items-center gap-2">
+            <div className="flex-1 flex items-center gap-2 rounded-full bg-secondary px-3 sm:px-4 py-2">
+              <Search className="h-4 w-4 text-muted-foreground shrink-0" />
               <input
                 type="text"
                 placeholder="북마크 검색..."
@@ -191,14 +225,14 @@ const Index = () => {
                 className="bg-transparent text-sm outline-none w-full placeholder:text-muted-foreground"
               />
             </div>
-            <button className="p-2 rounded-full hover:bg-accent transition-colors">
+            <button className="p-2 rounded-full hover:bg-accent transition-colors shrink-0">
               <SlidersHorizontal className="h-5 w-5 text-muted-foreground" />
             </button>
           </div>
 
           {/* Twitter profile info */}
           {isTwitterConnected && twitterProfile && (
-            <div className="px-4 pb-3 flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="px-3 sm:px-4 pb-3 flex items-center gap-2 text-sm text-muted-foreground">
               {twitterProfile.twitter_avatar_url && (
                 <img
                   src={twitterProfile.twitter_avatar_url}
@@ -218,19 +252,19 @@ const Index = () => {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : !isTwitterConnected ? (
-            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+            <div className="flex flex-col items-center justify-center py-20 px-4 text-muted-foreground">
               <svg className="h-12 w-12 mb-4 text-primary" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
               </svg>
               <p className="text-lg font-medium">X 계정을 연동하세요</p>
-              <p className="text-sm mt-1">
+              <p className="text-sm mt-1 text-center">
                 상단의 "X 계정 연동" 버튼을 클릭해주세요
               </p>
             </div>
           ) : filteredBookmarks.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+            <div className="flex flex-col items-center justify-center py-20 px-4 text-muted-foreground">
               <p className="text-lg font-medium">북마크가 없습니다</p>
-              <p className="text-sm mt-1">
+              <p className="text-sm mt-1 text-center">
                 {dbBookmarks.length === 0
                   ? '"동기화" 버튼을 눌러 북마크를 가져오세요'
                   : "이 폴더에 저장된 북마크가 없어요."}
