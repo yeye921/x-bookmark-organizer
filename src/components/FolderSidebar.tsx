@@ -81,6 +81,7 @@ interface FolderSidebarProps {
   folders: FolderType[];
   onAddFolder: (name: string, icon: string) => void;
   onDeleteFolder: (id: string) => void;
+  hideCollapseButton?: boolean;
 }
 
 export function FolderSidebar({
