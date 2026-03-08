@@ -12,6 +12,7 @@ import {
   Folder,
   Check,
   X,
+  Trash2,
 } from "lucide-react";
 import type { Folder as FolderType } from "@/data/mockBookmarks";
 import { cn } from "@/lib/utils";
@@ -33,6 +34,7 @@ interface FolderSidebarProps {
   onToggleCollapse: () => void;
   folders: FolderType[];
   onAddFolder: (name: string) => void;
+  onDeleteFolder: (id: string) => void;
 }
 
 export function FolderSidebar({
@@ -42,10 +44,12 @@ export function FolderSidebar({
   onToggleCollapse,
   folders,
   onAddFolder,
+  onDeleteFolder,
 }: FolderSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -64,6 +68,18 @@ export function FolderSidebar({
       onAddFolder(trimmed);
       setNewFolderName("");
       setIsAdding(false);
+    }
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirmDeleteId === id) {
+      onDeleteFolder(id);
+      setConfirmDeleteId(null);
+      if (selectedFolder === id) onSelectFolder("all");
+    } else {
+      setConfirmDeleteId(id);
+      // Auto-dismiss after 3s
+      setTimeout(() => setConfirmDeleteId(null), 3000);
     }
   };
 
@@ -113,32 +129,57 @@ export function FolderSidebar({
         {filteredFolders.map((folder) => {
           const Icon = iconMap[folder.icon] || Bookmark;
           const isActive = selectedFolder === folder.id;
+          const isDeletable = folder.id !== "all";
+          const isConfirming = confirmDeleteId === folder.id;
 
           return (
-            <button
+            <div
               key={folder.id}
-              onClick={() => onSelectFolder(folder.id)}
               className={cn(
-                "w-full flex items-center gap-3 px-4 py-3 transition-colors text-left",
+                "group flex items-center transition-colors",
                 "hover:bg-accent",
                 isActive && "bg-accent font-semibold"
               )}
             >
-              <Icon
-                className={cn(
-                  "h-5 w-5 shrink-0",
-                  isActive ? "text-primary" : "text-muted-foreground"
+              <button
+                onClick={() => onSelectFolder(folder.id)}
+                className="flex-1 flex items-center gap-3 px-4 py-3 text-left min-w-0"
+              >
+                <Icon
+                  className={cn(
+                    "h-5 w-5 shrink-0",
+                    isActive ? "text-primary" : "text-muted-foreground"
+                  )}
+                />
+                {!collapsed && (
+                  <>
+                    <span className="flex-1 text-[15px] truncate">{folder.name}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {folder.count}
+                    </span>
+                  </>
                 )}
-              />
-              {!collapsed && (
-                <>
-                  <span className="flex-1 text-[15px]">{folder.name}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {folder.count}
-                  </span>
-                </>
+              </button>
+
+              {/* Delete button */}
+              {isDeletable && !collapsed && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(folder.id);
+                  }}
+                  className={cn(
+                    "mr-2 p-1.5 rounded-full transition-all shrink-0",
+                    isConfirming
+                      ? "bg-destructive/20 text-destructive"
+                      : "opacity-0 group-hover:opacity-100 hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                  )}
+                  title={isConfirming ? "한번 더 클릭하면 삭제됩니다" : "폴더 삭제"}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
               )}
-            </button>
+            </div>
           );
         })}
       </nav>

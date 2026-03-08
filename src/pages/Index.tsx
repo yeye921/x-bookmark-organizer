@@ -1,7 +1,12 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { FolderSidebar } from "@/components/FolderSidebar";
 import { BookmarkCard } from "@/components/BookmarkCard";
-import { bookmarks, folders as initialFolders, type Folder } from "@/data/mockBookmarks";
+import {
+  bookmarks as initialBookmarks,
+  folders as initialFolders,
+  type Folder,
+  type Bookmark,
+} from "@/data/mockBookmarks";
 import { Search, SlidersHorizontal } from "lucide-react";
 
 const Index = () => {
@@ -9,16 +14,46 @@ const Index = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [folderList, setFolderList] = useState<Folder[]>(initialFolders);
+  const [bookmarkList, setBookmarkList] = useState<Bookmark[]>(initialBookmarks);
 
   const currentFolder = folderList.find((f) => f.id === selectedFolder);
 
-  const handleAddFolder = (name: string) => {
+  const handleAddFolder = useCallback((name: string) => {
     const id = name.toLowerCase().replace(/\s+/g, "-") + "-" + Date.now();
     setFolderList((prev) => [...prev, { id, name, icon: "folder", count: 0 }]);
-  };
+  }, []);
+
+  const handleDeleteFolder = useCallback((id: string) => {
+    setFolderList((prev) => prev.filter((f) => f.id !== id));
+    // Move bookmarks in deleted folder to unassigned
+    setBookmarkList((prev) =>
+      prev.map((b) => (b.folderId === id ? { ...b, folderId: null } : b))
+    );
+  }, []);
+
+  const handleMoveToFolder = useCallback((bookmarkId: string, folderId: string | null) => {
+    setBookmarkList((prev) =>
+      prev.map((b) => (b.id === bookmarkId ? { ...b, folderId } : b))
+    );
+  }, []);
+
+  const handleDeleteBookmark = useCallback((bookmarkId: string) => {
+    setBookmarkList((prev) => prev.filter((b) => b.id !== bookmarkId));
+  }, []);
+
+  // Recalculate folder counts
+  const foldersWithCounts = useMemo(() => {
+    return folderList.map((f) => ({
+      ...f,
+      count:
+        f.id === "all"
+          ? bookmarkList.length
+          : bookmarkList.filter((b) => b.folderId === f.id).length,
+    }));
+  }, [folderList, bookmarkList]);
 
   const filteredBookmarks = useMemo(() => {
-    let filtered = bookmarks;
+    let filtered = bookmarkList;
     if (selectedFolder !== "all") {
       filtered = filtered.filter((b) => b.folderId === selectedFolder);
     }
@@ -32,7 +67,7 @@ const Index = () => {
       );
     }
     return filtered;
-  }, [selectedFolder, searchQuery]);
+  }, [selectedFolder, searchQuery, bookmarkList]);
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -41,8 +76,9 @@ const Index = () => {
         onSelectFolder={setSelectedFolder}
         collapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-        folders={folderList}
+        folders={foldersWithCounts}
         onAddFolder={handleAddFolder}
+        onDeleteFolder={handleDeleteFolder}
       />
 
       {/* Main content */}
@@ -83,7 +119,13 @@ const Index = () => {
             </div>
           ) : (
             filteredBookmarks.map((bookmark) => (
-              <BookmarkCard key={bookmark.id} bookmark={bookmark} />
+              <BookmarkCard
+                key={bookmark.id}
+                bookmark={bookmark}
+                folders={foldersWithCounts}
+                onMoveToFolder={handleMoveToFolder}
+                onDeleteBookmark={handleDeleteBookmark}
+              />
             ))
           )}
         </div>
