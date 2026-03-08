@@ -8,7 +8,7 @@ import {
   FolderInput,
   Trash2,
   BadgeCheck,
-  ChevronRight,
+  Check,
 } from "lucide-react";
 import type { Bookmark, Folder } from "@/data/mockBookmarks";
 import { useState } from "react";
