@@ -40,7 +40,7 @@ export function useTwitterAuth() {
         throw new Error(authData.error || "Failed to get auth URL");
       }
 
-      sessionStorage.setItem("twitter_state", authData.state);
+      localStorage.setItem("twitter_state", authData.state);
 
       // In preview iframe, accessing window.top can throw "The operation is insecure"
       // so try top-navigation first and gracefully fall back to popup.
