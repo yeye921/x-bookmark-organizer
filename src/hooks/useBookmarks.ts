@@ -59,8 +59,19 @@ export function useBookmarks(userId: string | undefined) {
 
       let nextToken: string | null = null;
       let totalSynced = 0;
+      const seenTokens = new Set<string>();
+      const MAX_PAGES_PER_SYNC = 25;
+      let pageCount = 0;
 
       do {
+        if (nextToken) {
+          if (seenTokens.has(nextToken)) {
+            console.warn("Detected repeated pagination token, stopping sync loop", nextToken);
+            break;
+          }
+          seenTokens.add(nextToken);
+        }
+
         const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sync-bookmarks${nextToken ? `?pagination_token=${nextToken}` : ""}`;
         const res = await fetch(url, {
           headers: {
@@ -73,7 +84,13 @@ export function useBookmarks(userId: string | undefined) {
         if (!res.ok) throw new Error(result.error);
 
         totalSynced += result.synced;
-        nextToken = result.next_token;
+        nextToken = result.next_token ?? null;
+        pageCount += 1;
+
+        if (pageCount >= MAX_PAGES_PER_SYNC) {
+          console.warn(`Reached sync page limit (${MAX_PAGES_PER_SYNC}). Continue with another sync click.`);
+          break;
+        }
       } while (nextToken);
 
       await fetchData();
