@@ -17,7 +17,7 @@ export default function LoginPage() {
     );
   }
 
-  if (user) return <Navigate to="/" replace />;
+  if (user) return <Navigate to="/home" replace />;
 
   const handleLogin = async () => {
     setError("");
