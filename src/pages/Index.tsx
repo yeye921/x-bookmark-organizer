@@ -1,58 +1,82 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo } from "react";
 import { FolderSidebar } from "@/components/FolderSidebar";
 import { BookmarkCard } from "@/components/BookmarkCard";
+import { useAuth } from "@/hooks/useAuth";
+import { useBookmarks } from "@/hooks/useBookmarks";
+import { useTwitterAuth } from "@/hooks/useTwitterAuth";
+import { Navigate } from "react-router-dom";
 import {
-  bookmarks as initialBookmarks,
-  folders as initialFolders,
-  type Folder,
-  type Bookmark,
-} from "@/data/mockBookmarks";
-import { Search, SlidersHorizontal } from "lucide-react";
+  Search,
+  SlidersHorizontal,
+  RefreshCw,
+  LogOut,
+  Loader2,
+} from "lucide-react";
+import type { Folder, Bookmark } from "@/data/mockBookmarks";
 
 const Index = () => {
+  const { user, twitterProfile, loading: authLoading, signOut, isTwitterConnected } = useAuth();
+  const { connectTwitter, connecting } = useTwitterAuth();
+  const {
+    bookmarks: dbBookmarks,
+    folders: dbFolders,
+    syncing,
+    loading: dataLoading,
+    syncBookmarks,
+    addFolder,
+    deleteFolder,
+    moveBookmarkToFolder,
+    deleteBookmark,
+  } = useBookmarks(user?.id);
+
   const [selectedFolder, setSelectedFolder] = useState("all");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [folderList, setFolderList] = useState<Folder[]>(initialFolders);
-  const [bookmarkList, setBookmarkList] = useState<Bookmark[]>(initialBookmarks);
+
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) return <Navigate to="/login" replace />;
+
+  // Transform DB data to component format
+  const folderList: Folder[] = [
+    { id: "all", name: "모든 북마크", icon: "bookmark", count: dbBookmarks.length },
+    ...dbFolders.map((f) => ({
+      id: f.id,
+      name: f.name,
+      icon: f.icon,
+      count: dbBookmarks.filter((b) => b.folder_id === f.id).length,
+    })),
+  ];
+
+  const bookmarkList: Bookmark[] = dbBookmarks.map((b) => ({
+    id: b.id,
+    author: {
+      name: b.author_name || "Unknown",
+      handle: b.author_handle || "@unknown",
+      avatar: b.author_avatar || "",
+      verified: b.author_verified || false,
+    },
+    content: b.content || "",
+    timestamp: b.tweet_timestamp
+      ? formatRelativeTime(b.tweet_timestamp)
+      : "",
+    likes: b.likes || 0,
+    retweets: b.retweets || 0,
+    replies: b.replies || 0,
+    views: b.views || 0,
+    folderId: b.folder_id,
+    images: b.images && b.images.length > 0 ? b.images : undefined,
+  }));
 
   const currentFolder = folderList.find((f) => f.id === selectedFolder);
 
-  const handleAddFolder = useCallback((name: string, icon: string = "folder") => {
-    const id = name.toLowerCase().replace(/\s+/g, "-") + "-" + Date.now();
-    setFolderList((prev) => [...prev, { id, name, icon, count: 0 }]);
-  }, []);
-
-  const handleDeleteFolder = useCallback((id: string) => {
-    setFolderList((prev) => prev.filter((f) => f.id !== id));
-    // Move bookmarks in deleted folder to unassigned
-    setBookmarkList((prev) =>
-      prev.map((b) => (b.folderId === id ? { ...b, folderId: null } : b))
-    );
-  }, []);
-
-  const handleMoveToFolder = useCallback((bookmarkId: string, folderId: string | null) => {
-    setBookmarkList((prev) =>
-      prev.map((b) => (b.id === bookmarkId ? { ...b, folderId } : b))
-    );
-  }, []);
-
-  const handleDeleteBookmark = useCallback((bookmarkId: string) => {
-    setBookmarkList((prev) => prev.filter((b) => b.id !== bookmarkId));
-  }, []);
-
-  // Recalculate folder counts
-  const foldersWithCounts = useMemo(() => {
-    return folderList.map((f) => ({
-      ...f,
-      count:
-        f.id === "all"
-          ? bookmarkList.length
-          : bookmarkList.filter((b) => b.folderId === f.id).length,
-    }));
-  }, [folderList, bookmarkList]);
-
-  const filteredBookmarks = useMemo(() => {
+  const filteredBookmarks = (() => {
     let filtered = bookmarkList;
     if (selectedFolder !== "all") {
       filtered = filtered.filter((b) => b.folderId === selectedFolder);
@@ -67,7 +91,16 @@ const Index = () => {
       );
     }
     return filtered;
-  }, [selectedFolder, searchQuery, bookmarkList]);
+  })();
+
+  const handleAddFolder = async (name: string, icon: string = "folder") => {
+    await addFolder(name, icon);
+  };
+
+  const handleDeleteFolder = async (id: string) => {
+    await deleteFolder(id);
+    if (selectedFolder === id) setSelectedFolder("all");
+  };
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -76,7 +109,7 @@ const Index = () => {
         onSelectFolder={setSelectedFolder}
         collapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-        folders={foldersWithCounts}
+        folders={folderList}
         onAddFolder={handleAddFolder}
         onDeleteFolder={handleDeleteFolder}
       />
@@ -85,11 +118,49 @@ const Index = () => {
       <main className="flex-1 border-r border-border max-w-[600px]">
         {/* Header */}
         <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border">
-          <div className="px-4 py-3">
-            <h2 className="text-xl font-bold">{currentFolder?.name || "북마크"}</h2>
-            <p className="text-sm text-muted-foreground">
-              {filteredBookmarks.length}개의 포스트
-            </p>
+          <div className="px-4 py-3 flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold">
+                {currentFolder?.name || "북마크"}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {filteredBookmarks.length}개의 포스트
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {isTwitterConnected ? (
+                <button
+                  onClick={() => syncBookmarks()}
+                  disabled={syncing}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+                >
+                  <RefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
+                  {syncing ? "동기화 중..." : "동기화"}
+                </button>
+              ) : (
+                <button
+                  onClick={() => connectTwitter()}
+                  disabled={connecting}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+                >
+                  {connecting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                    </svg>
+                  )}
+                  X 계정 연동
+                </button>
+              )}
+              <button
+                onClick={signOut}
+                className="p-2 rounded-full hover:bg-accent transition-colors"
+                title="로그아웃"
+              >
+                <LogOut className="h-5 w-5 text-muted-foreground" />
+              </button>
+            </div>
           </div>
 
           {/* Search bar */}
@@ -108,33 +179,80 @@ const Index = () => {
               <SlidersHorizontal className="h-5 w-5 text-muted-foreground" />
             </button>
           </div>
+
+          {/* Twitter profile info */}
+          {isTwitterConnected && twitterProfile && (
+            <div className="px-4 pb-3 flex items-center gap-2 text-sm text-muted-foreground">
+              {twitterProfile.twitter_avatar_url && (
+                <img
+                  src={twitterProfile.twitter_avatar_url}
+                  alt=""
+                  className="w-5 h-5 rounded-full"
+                />
+              )}
+              <span>@{twitterProfile.twitter_username}</span>
+            </div>
+          )}
         </header>
 
-        {/* Bookmark list */}
+        {/* Content */}
         <div>
-          {filteredBookmarks.length === 0 ? (
+          {dataLoading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : !isTwitterConnected ? (
+            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+              <svg className="h-12 w-12 mb-4 text-primary" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
+              <p className="text-lg font-medium">X 계정을 연동하세요</p>
+              <p className="text-sm mt-1">
+                상단의 "X 계정 연동" 버튼을 클릭해주세요
+              </p>
+            </div>
+          ) : filteredBookmarks.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
               <p className="text-lg font-medium">북마크가 없습니다</p>
-              <p className="text-sm mt-1">이 폴더에 저장된 북마크가 없어요.</p>
+              <p className="text-sm mt-1">
+                {dbBookmarks.length === 0
+                  ? '"동기화" 버튼을 눌러 북마크를 가져오세요'
+                  : "이 폴더에 저장된 북마크가 없어요."}
+              </p>
             </div>
           ) : (
             filteredBookmarks.map((bookmark) => (
               <BookmarkCard
                 key={bookmark.id}
                 bookmark={bookmark}
-                folders={foldersWithCounts}
-                onMoveToFolder={handleMoveToFolder}
-                onDeleteBookmark={handleDeleteBookmark}
+                folders={folderList}
+                onMoveToFolder={moveBookmarkToFolder}
+                onDeleteBookmark={deleteBookmark}
               />
             ))
           )}
         </div>
       </main>
 
-      {/* Right spacer for X-like centered layout */}
+      {/* Right spacer */}
       <div className="flex-1 hidden lg:block" />
     </div>
   );
 };
+
+function formatRelativeTime(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  const diffHour = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHour / 24);
+
+  if (diffMin < 1) return "방금";
+  if (diffMin < 60) return `${diffMin}분`;
+  if (diffHour < 24) return `${diffHour}시간`;
+  if (diffDay < 7) return `${diffDay}일`;
+  return date.toLocaleDateString("ko-KR", { month: "short", day: "numeric" });
+}
 
 export default Index;
