@@ -1,15 +1,13 @@
-import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useTwitterAuth } from "@/hooks/useTwitterAuth";
 import { Navigate } from "react-router-dom";
-import { Bookmark, Mail, Lock, Loader2 } from "lucide-react";
+import { Bookmark, Loader2 } from "lucide-react";
+import { useState } from "react";
 
 export default function LoginPage() {
-  const { user, loading, signIn, signUp } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false);
+  const { user, loading } = useAuth();
+  const { connectTwitter, connecting } = useTwitterAuth();
   const [error, setError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
 
   if (loading) {
     return (
@@ -21,17 +19,13 @@ export default function LoginPage() {
 
   if (user) return <Navigate to="/" replace />;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = async () => {
     setError("");
-    setSubmitting(true);
-
-    const { error } = isSignUp
-      ? await signUp(email, password)
-      : await signIn(email, password);
-
-    if (error) setError(error.message);
-    setSubmitting(false);
+    try {
+      await connectTwitter();
+    } catch (err: any) {
+      setError(err.message || "로그인에 실패했습니다");
+    }
   };
 
   return (
@@ -48,56 +42,25 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 rounded-xl bg-secondary px-4 py-3">
-              <Mail className="h-5 w-5 text-muted-foreground shrink-0" />
-              <input
-                type="email"
-                placeholder="이메일"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="bg-transparent text-sm outline-none w-full placeholder:text-muted-foreground"
-              />
-            </div>
-            <div className="flex items-center gap-3 rounded-xl bg-secondary px-4 py-3">
-              <Lock className="h-5 w-5 text-muted-foreground shrink-0" />
-              <input
-                type="password"
-                placeholder="비밀번호"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                className="bg-transparent text-sm outline-none w-full placeholder:text-muted-foreground"
-              />
-            </div>
-          </div>
+        {error && (
+          <p className="text-destructive text-sm text-center">{error}</p>
+        )}
 
-          {error && (
-            <p className="text-destructive text-sm text-center">{error}</p>
+        {/* X Login Button */}
+        <button
+          onClick={handleLogin}
+          disabled={connecting}
+          className="w-full py-3 rounded-full bg-foreground text-background font-semibold text-sm hover:bg-foreground/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+        >
+          {connecting ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current" aria-hidden="true">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+            </svg>
           )}
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full py-3 rounded-full bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-            {isSignUp ? "가입하기" : "로그인"}
-          </button>
-        </form>
-
-        <div className="text-center">
-          <button
-            onClick={() => { setIsSignUp(!isSignUp); setError(""); }}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            {isSignUp ? "이미 계정이 있으신가요? 로그인" : "계정이 없으신가요? 가입하기"}
-          </button>
-        </div>
+          {connecting ? "연결 중..." : "X로 로그인"}
+        </button>
       </div>
     </div>
   );

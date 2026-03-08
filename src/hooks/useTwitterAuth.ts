@@ -19,37 +19,15 @@ export function useTwitterAuth() {
       const codeVerifier = generateCodeVerifier();
       const redirectUri = `${window.location.origin}/twitter-callback`;
 
-      // Store code verifier for the callback
       sessionStorage.setItem("twitter_code_verifier", codeVerifier);
       sessionStorage.setItem("twitter_redirect_uri", redirectUri);
 
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
-
-      const response = await supabase.functions.invoke("twitter-auth", {
-        body: { redirect_uri: redirectUri, code_verifier: codeVerifier },
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        method: "POST",
-      });
-
-      // Handle the response - supabase.functions.invoke returns { data, error }
-      if (response.error) {
-        throw new Error(response.error.message || "Failed to get auth URL");
-      }
-
-      const result = typeof response.data === "string"
-        ? JSON.parse(response.data)
-        : response.data;
-
-      // Need to pass action as query param
-      const authUrlResponse = await fetch(
+      // No auth needed - this is the login entry point
+      const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/twitter-auth?action=auth-url`,
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
@@ -57,14 +35,12 @@ export function useTwitterAuth() {
         }
       );
 
-      const authData = await authUrlResponse.json();
-      if (!authUrlResponse.ok) {
+      const authData = await response.json();
+      if (!response.ok) {
         throw new Error(authData.error || "Failed to get auth URL");
       }
 
       sessionStorage.setItem("twitter_state", authData.state);
-
-      // Redirect to Twitter
       window.location.href = authData.auth_url;
     } catch (error) {
       console.error("Twitter connect error:", error);
@@ -86,15 +62,11 @@ export function useTwitterAuth() {
       throw new Error("Missing PKCE data");
     }
 
-    const { data: sessionData } = await supabase.auth.getSession();
-    const token = sessionData.session?.access_token;
-
     const response = await fetch(
       `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/twitter-auth?action=callback`,
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
@@ -107,10 +79,22 @@ export function useTwitterAuth() {
       throw new Error(result.error || "Callback failed");
     }
 
-    // Clean up
+    // Clean up session storage
     sessionStorage.removeItem("twitter_code_verifier");
     sessionStorage.removeItem("twitter_redirect_uri");
     sessionStorage.removeItem("twitter_state");
+
+    // Use the token_hash to verify OTP and sign in
+    if (result.token_hash && result.email) {
+      const { error } = await supabase.auth.verifyOtp({
+        token_hash: result.token_hash,
+        type: "magiclink",
+      });
+      if (error) {
+        console.error("OTP verify error:", error);
+        throw new Error("로그인 세션 생성에 실패했습니다");
+      }
+    }
 
     return result;
   }, []);
