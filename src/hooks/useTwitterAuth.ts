@@ -96,9 +96,9 @@ export function useTwitterAuth() {
     }
 
     // Clean up session storage
-    sessionStorage.removeItem("twitter_code_verifier");
-    sessionStorage.removeItem("twitter_redirect_uri");
-    sessionStorage.removeItem("twitter_state");
+    localStorage.removeItem("twitter_code_verifier");
+    localStorage.removeItem("twitter_redirect_uri");
+    localStorage.removeItem("twitter_state");
 
     // Use the token_hash to verify OTP and sign in
     if (result.token_hash && result.email) {
