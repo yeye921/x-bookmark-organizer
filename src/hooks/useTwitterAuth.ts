@@ -19,8 +19,8 @@ export function useTwitterAuth() {
       const codeVerifier = generateCodeVerifier();
       const redirectUri = `${window.location.origin}/twitter-callback`;
 
-      sessionStorage.setItem("twitter_code_verifier", codeVerifier);
-      sessionStorage.setItem("twitter_redirect_uri", redirectUri);
+      localStorage.setItem("twitter_code_verifier", codeVerifier);
+      localStorage.setItem("twitter_redirect_uri", redirectUri);
 
       // No auth needed - this is the login entry point
       const response = await fetch(
@@ -40,7 +40,7 @@ export function useTwitterAuth() {
         throw new Error(authData.error || "Failed to get auth URL");
       }
 
-      sessionStorage.setItem("twitter_state", authData.state);
+      localStorage.setItem("twitter_state", authData.state);
 
       // In preview iframe, accessing window.top can throw "The operation is insecure"
       // so try top-navigation first and gracefully fall back to popup.
@@ -66,9 +66,9 @@ export function useTwitterAuth() {
   }, []);
 
   const handleCallback = useCallback(async (code: string, state: string) => {
-    const savedState = sessionStorage.getItem("twitter_state");
-    const codeVerifier = sessionStorage.getItem("twitter_code_verifier");
-    const redirectUri = sessionStorage.getItem("twitter_redirect_uri");
+    const savedState = localStorage.getItem("twitter_state");
+    const codeVerifier = localStorage.getItem("twitter_code_verifier");
+    const redirectUri = localStorage.getItem("twitter_redirect_uri");
 
     if (state !== savedState) {
       throw new Error("State mismatch - possible CSRF attack");
@@ -96,9 +96,9 @@ export function useTwitterAuth() {
     }
 
     // Clean up session storage
-    sessionStorage.removeItem("twitter_code_verifier");
-    sessionStorage.removeItem("twitter_redirect_uri");
-    sessionStorage.removeItem("twitter_state");
+    localStorage.removeItem("twitter_code_verifier");
+    localStorage.removeItem("twitter_redirect_uri");
+    localStorage.removeItem("twitter_state");
 
     // Use the token_hash to verify OTP and sign in
     if (result.token_hash && result.email) {
