@@ -81,6 +81,7 @@ const Index = () => {
     views: b.views || 0,
     folderId: b.folder_id,
     images: b.images && b.images.length > 0 ? b.images : undefined,
+    rawTimestamp: b.tweet_timestamp || undefined,
   }));
 
   const currentFolder = folderList.find((f) => f.id === selectedFolder);
