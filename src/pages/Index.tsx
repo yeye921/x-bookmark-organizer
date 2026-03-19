@@ -99,6 +99,14 @@ const Index = () => {
           b.author.handle.toLowerCase().includes(q)
       );
     }
+    // Sort by timestamp
+    filtered = [...filtered].sort((a, b) => {
+      if (!a.rawTimestamp && !b.rawTimestamp) return 0;
+      if (!a.rawTimestamp) return 1;
+      if (!b.rawTimestamp) return -1;
+      const diff = new Date(b.rawTimestamp).getTime() - new Date(a.rawTimestamp).getTime();
+      return sortOrder === "newest" ? diff : -diff;
+    });
     return filtered;
   })();
 
