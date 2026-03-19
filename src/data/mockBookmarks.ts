@@ -9,6 +9,7 @@ export interface Bookmark {
   };
   content: string;
   timestamp: string;
+  rawTimestamp?: string;
   likes: number;
   retweets: number;
   replies: number;
