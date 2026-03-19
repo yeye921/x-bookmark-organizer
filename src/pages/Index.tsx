@@ -236,8 +236,15 @@ const Index = () => {
                 className="bg-transparent text-sm outline-none w-full placeholder:text-muted-foreground"
               />
             </div>
-            <button className="p-2 rounded-full hover:bg-accent transition-colors shrink-0">
-              <SlidersHorizontal className="h-5 w-5 text-muted-foreground" />
+            <button
+              onClick={() => setSortOrder(sortOrder === "newest" ? "oldest" : "newest")}
+              className="flex items-center gap-1.5 p-2 rounded-full hover:bg-accent transition-colors shrink-0"
+              title={sortOrder === "newest" ? "오래된순으로 변경" : "최신순으로 변경"}
+            >
+              <ArrowUpDown className="h-5 w-5 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground hidden sm:inline">
+                {sortOrder === "newest" ? "최신순" : "오래된순"}
+              </span>
             </button>
           </div>
 
