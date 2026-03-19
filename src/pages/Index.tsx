@@ -15,6 +15,7 @@ import {
   Sun,
   Moon,
   Menu,
+  ArrowUpDown,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import type { Folder, Bookmark } from "@/data/mockBookmarks";
